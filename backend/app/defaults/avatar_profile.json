@@ -1,0 +1,26 @@
+{
+  "name": "Syed Azeem (primary presenter)",
+  "reference_file": "IMG_4917.MOV",
+  "observed": {
+    "duration_s": 68.55,
+    "source": "HEVC 1990x3538 @60fps, portrait; AAC stereo 44.1 kHz",
+    "framing": "Centered medium shot, eye-level, head in upper third, hands visible above desk",
+    "setting": "Indoor desk, dark city-view window and white curtains behind, warm ceiling downlights, RGB podcast mic in foreground",
+    "wardrobe": "Dark grey/black overshirt jacket over black tee",
+    "appearance": "Short dark curly hair, trimmed beard/stubble, medium-brown skin tone",
+    "delivery": "Direct-to-camera, energetic, frequent two-hand gestures, raised eyebrows for emphasis, conversational Urdu/Hindi code-mixed with English business terms",
+    "language": "Roman-Urdu-style Urdu/Hindi with English e-commerce terms (Amazon, business, training, mentorship, video courses)",
+    "speech_rate_wps": 2.6,
+    "audio": "Clean lav/desk mic, quiet: -32.4 LUFS integrated, -12.5 dBFS peak (needs ~+17 dB gain)"
+  },
+  "provider": {
+    "name": "heygen",
+    "avatar_id": "",
+    "voice_id": "",
+    "mode": "digital_twin",
+    "notes": "Create a HeyGen Digital Twin from YOUR footage (HeyGen requires your own consent recording), then paste avatar_id and voice_id here."
+  },
+  "fallback_mode": "own_recording",
+  "tts_script": "roman_urdu",
+  "identity_policy": "Only this presenter. Never substitute another person."
+}

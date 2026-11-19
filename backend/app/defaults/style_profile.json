@@ -1,0 +1,95 @@
+{
+  "name": "Editorial Forest (from Reference 2)",
+  "version": 1,
+  "source_reference": "IMG_4762.MP4",
+  "notes": "Measured from the reference: 58.0 s, 720x1280 @30fps, ~150 spoken words (~2.8 words/s), ~50 visual change events (one every ~1.2 s), 4 hard angle changes (15.2s, 27.1s, 43.5s, 54.0s), integrated loudness -13.9 LUFS. Creator branding (handle, logos, watermark) intentionally NOT copied.",
+  "canvas": {"width": 1080, "height": 1920, "fps": 30},
+  "palette": {
+    "primary": "#18362A",
+    "primary_alpha": 0.92,
+    "cream": "#F2EDE0",
+    "gold": "#C9A45C",
+    "ink": "#111111",
+    "highlight": "#C9A45C"
+  },
+  "fonts": {
+    "subtitle": "Playfair Display",
+    "title_sans": "Inter Black",
+    "title_serif_italic": "Instrument Serif Italic",
+    "title_serif": "Instrument Serif",
+    "ui": "Inter Medium"
+  },
+  "pacing": {
+    "remove_pauses_longer_than": 0.32,
+    "keep_padding": 0.07,
+    "target_words_per_second": 2.8,
+    "visual_change_every_s": [1.0, 2.5],
+    "angle_change_every_s": [3.0, 6.0]
+  },
+  "camera": {
+    "framings": [
+      {"name": "wide", "zoom": 1.0},
+      {"name": "medium", "zoom": 1.14},
+      {"name": "close", "zoom": 1.32}
+    ],
+    "framing_pattern": ["medium", "close", "wide", "close", "medium", "close"],
+    "slow_push_in_per_s": 0.012,
+    "emphasis_punch_in": 1.08
+  },
+  "subtitles": {
+    "mode": "phrase_with_word_highlight",
+    "max_words_per_line": 4,
+    "max_chars_per_line": 22,
+    "font_size": 64,
+    "position_y_ratio": 0.70,
+    "box": true,
+    "box_color": "#18362A",
+    "text_color": "#F2EDE0",
+    "active_word_color": "#C9A45C",
+    "upcoming_word_color": "#8FA89A",
+    "uppercase": false
+  },
+  "titles": {
+    "hook_style": "giant_serif_over_head",
+    "keyword_style": "sans_black_on_green_bar_with_serif_italic_second_line",
+    "hook_font_size": 190,
+    "keyword_font_size": 120,
+    "position_y_ratio": 0.17,
+    "duration_s": 1.6
+  },
+  "broll": {
+    "coverage_target": 0.45,
+    "fullscreen_ratio": 0.35,
+    "card_ratio": 0.65,
+    "card": {"y_ratio": 0.08, "width_ratio": 0.78, "corner_radius": 26, "border_color": "#18362A", "border_px": 8},
+    "min_len_s": 1.4,
+    "max_len_s": 3.2,
+    "gap_s": [0.8, 2.2]
+  },
+  "transitions": {
+    "default": "cut",
+    "broll_in": "pop_scale",
+    "sfx_on_transition": true
+  },
+  "grade": {
+    "contrast": 1.06,
+    "saturation": 0.92,
+    "brightness": 0.0,
+    "gamma": 1.0,
+    "warmth": 0.04,
+    "vignette": 0.25
+  },
+  "cta": {
+    "style": "white_box_top_with_comment_bubble",
+    "duration_s": 6.0,
+    "end_fade_s": 1.2
+  },
+  "audio": {
+    "voice_target_lufs": -15.0,
+    "voice_true_peak_db": -3.0,
+    "music_db": -27.0,
+    "sfx_db": -22.0,
+    "duck_music_during_speech": true,
+    "sfx_kinds": ["whoosh", "click", "pop", "impact", "notify"]
+  }
+}

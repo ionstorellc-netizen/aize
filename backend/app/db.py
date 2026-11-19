@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from sqlalchemy import create_engine, String, Integer, Float, Text, DateTime, JSON, ForeignKey
+from sqlalchemy.types import TypeDecorator
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, sessionmaker, relationship
 
 from .config import DATABASE_URL
@@ -13,6 +14,26 @@ def now():
     return datetime.now(timezone.utc)
 
 
+class UTCDateTime(TypeDecorator):
+    """Timestamps are always UTC. SQLite drops the offset, so it is stored naive-UTC and re-attached on load;
+    isoformat() then ends in +00:00 and browsers convert to local time correctly."""
+    impl = DateTime(timezone=True)
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        value = value.astimezone(timezone.utc)
+        return value.replace(tzinfo=None) if dialect.name == "sqlite" else value
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return None
+        return value.replace(tzinfo=timezone.utc) if value.tzinfo is None else value.astimezone(timezone.utc)
+
+
 class Base(DeclarativeBase):
     pass
 
@@ -21,7 +42,7 @@ class Setting(Base):
     __tablename__ = "settings"
     key: Mapped[str] = mapped_column(String(80), primary_key=True)
     value: Mapped[dict] = mapped_column(JSON)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=now, onupdate=now)
 
 
 class Project(Base):
@@ -34,8 +55,8 @@ class Project(Base):
     avatar_mode: Mapped[str] = mapped_column(String(40), default="own_recording")  # heygen|own_recording
     data: Mapped[dict] = mapped_column(JSON, default=dict)
     cost_usd: Mapped[float] = mapped_column(Float, default=0.0)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=now)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=now, onupdate=now)
     stages: Mapped[list["Stage"]] = relationship(back_populates="project", order_by="Stage.order", cascade="all, delete-orphan")
 
 
@@ -49,8 +70,8 @@ class Stage(Base):
     message: Mapped[str] = mapped_column(Text, default="")
     output: Mapped[dict] = mapped_column(JSON, default=dict)
     attempts: Mapped[int] = mapped_column(Integer, default=0)
-    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
     project: Mapped[Project] = relationship(back_populates="stages")
 
 
@@ -63,9 +84,9 @@ class Job(Base):
     status: Mapped[str] = mapped_column(String(20), default="queued")  # queued|running|done|failed
     error: Mapped[str] = mapped_column(Text, default="")
     log: Mapped[str] = mapped_column(Text, default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
-    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=now)
+    started_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(UTCDateTime(), nullable=True)
 
 
 class ResearchRun(Base):
@@ -77,7 +98,7 @@ class ResearchRun(Base):
     status: Mapped[str] = mapped_column(String(20), default="queued")
     error: Mapped[str] = mapped_column(Text, default="")
     result: Mapped[dict] = mapped_column(JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=now)
 
 
 class Competitor(Base):
@@ -92,7 +113,7 @@ class Competitor(Base):
     source: Mapped[str] = mapped_column(String(40), default="manual")  # youtube_api|instagram_api|manual
     verification: Mapped[str] = mapped_column(String(20), default="unverified")  # verified|estimated|unverified
     research_run_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=now)
 
 
 class Idea(Base):
@@ -103,7 +124,7 @@ class Idea(Base):
     data: Mapped[dict] = mapped_column(JSON, default=dict)
     status: Mapped[str] = mapped_column(String(20), default="new")  # new|approved|rejected|saved|used
     research_run_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=now)
 
 
 class Script(Base):
@@ -115,8 +136,8 @@ class Script(Base):
     data: Mapped[dict] = mapped_column(JSON, default=dict)
     status: Mapped[str] = mapped_column(String(20), default="draft")  # draft|approved
     source: Mapped[str] = mapped_column(String(20), default="claude")  # claude|manual
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now, onupdate=now)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=now)
+    updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=now, onupdate=now)
 
 
 class Asset(Base):
@@ -134,7 +155,7 @@ class Asset(Base):
     height: Mapped[int | None] = mapped_column(Integer, nullable=True)
     project_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     meta: Mapped[dict] = mapped_column(JSON, default=dict)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=now)
 
 
 class IntegrationEvent(Base):
@@ -147,7 +168,7 @@ class IntegrationEvent(Base):
     units: Mapped[float] = mapped_column(Float, default=0)
     cost_usd: Mapped[float] = mapped_column(Float, default=0)
     project_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=now)
 
 
 def init_db():

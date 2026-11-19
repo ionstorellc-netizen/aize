@@ -5,7 +5,7 @@ export default function Library() {
   const [kind, setKind] = useState('broll,image')
   const list = useApi('/assets?kind=' + kind, [kind])
   const integ = useApi('/integrations')
-  const pexOk = ['connected', 'configured_untested'].includes(integ.data?.find(i => i.key === 'pexels')?.state)
+  const pexOk = (integ.data || []).some(i => ['pexels', 'pixabay'].includes(i.key) && ['connected', 'configured_untested'].includes(i.state))
   const [up, setUp] = useState({ kind: 'broll', tags: '', license: 'Own footage' })
   const [busy, setBusy] = useState(false)
   const [q, setQ] = useState('')
@@ -21,7 +21,7 @@ export default function Library() {
   const search = async () => setResults(await act(() => api('/stock/search?q=' + encodeURIComponent(q))))
   const imp = async it => { await act(() => api('/stock/import', { method: 'POST', body: { item: it } }), 'Imported into your library'); list.reload() }
   return <div className="page">
-    <div className="head"><div><h1>B-Roll <em>Library</em></h1><p>Your own footage is used first. Tag clips with what they show (e.g. "yiwu, market, stalls") and the B-roll agent matches them to what you say. Pexels clips are licensed under the Pexels License.</p></div></div>
+    <div className="head"><div><h1>B-Roll <em>Library</em></h1><p>Your own footage is used first. Tag clips with what they show (e.g. "yiwu, market, stalls") and the B-roll agent matches them to what you say. Stock clips come from Pexels or Pixabay, both free for commercial use.</p></div></div>
     <div className="grid g2" style={{ marginBottom: 16 }}>
       <div className="card"><h2>Upload media</h2>
         <div className="grid g3"><div><label>Type</label><select value={up.kind} onChange={e => setUp({ ...up, kind: e.target.value })}><option value="broll">B-roll video</option><option value="image">Image / screenshot</option><option value="music">Music (licensed)</option></select></div>
@@ -30,9 +30,9 @@ export default function Library() {
         <input type="file" multiple accept="video/*,image/*,audio/*" style={{ marginTop: 10 }} disabled={busy} onChange={upload} />
         {busy && <div className="small muted">Uploading…</div>}
       </div>
-      <div className="card"><h2>Pexels stock search <Badge s={pexOk ? 'ok' : 'not_configured'}>{pexOk ? 'available' : 'add PEXELS_API_KEY'}</Badge></h2>
+      <div className="card"><h2>Stock footage search <Badge s={pexOk ? 'ok' : 'not_configured'}>{pexOk ? 'available' : 'add a Pixabay key in Integrations'}</Badge></h2>
         <div className="row"><input value={q} onChange={e => setQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && search()} placeholder="amazon warehouse, china factory…" style={{ flex: 1, width: 'auto' }} /><button className="btn" disabled={!pexOk || !q} onClick={search}>Search</button></div>
-        {results.length > 0 && <div className="grid g4" style={{ marginTop: 10 }}>{results.map(r => <div key={r.id}><a href={r.url} target="_blank" className="small">{r.author}</a><div className="small dim">{r.width}x{r.height} · {r.duration}s</div><button className="btn sm" onClick={() => imp(r)}>Import</button></div>)}</div>}
+        {results.length > 0 && <div className="grid g4" style={{ marginTop: 10 }}>{results.map(r => <div key={r.provider + r.id}><a href={r.url} target="_blank" className="small">{r.author}</a><div className="small dim">{r.provider} · {r.width}x{r.height} · {r.duration}s</div><button className="btn sm" onClick={() => imp(r)}>Import</button></div>)}</div>}
       </div>
     </div>
     <div className="tabs">{[['broll,image', 'Footage & images'], ['music', 'Music'], ['avatar', 'Recordings'], ['render', 'Renders']].map(([k, l]) => <button key={k} className={kind === k ? 'on' : ''} onClick={() => setKind(k)}>{l}</button>)}</div>

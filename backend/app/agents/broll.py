@@ -1,6 +1,6 @@
 """B-roll Intelligence Agent: one visual decision per spoken sentence.
 
-Source priority (configurable): your uploaded library -> Pexels licensed stock -> typographic graphic.
+Source priority (configurable): your uploaded library -> free stock (Pexels, else Pixabay) -> typographic graphic.
 Graphics are clearly designed cards (headline text on the brand colour); the agent never fabricates
 screenshots, dashboards, results or statistics.
 """
@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 from ..db import SessionLocal, Asset
-from ..providers import pexels, claude
+from ..providers import stock, claude
 from ..engine import graphics
 from ..engine.edl import sentences, remove_stutters
 from ..util import probe
@@ -117,28 +117,29 @@ def plan(transcript, workdir: Path, style, script=None, project_id=None, log=pri
                         used_assets.add(a.id)
                         item = {"path": a.path, "media": "image" if a.kind == "image" else "video", "asset_id": a.id,
                                 "source": "library", "query": " / ".join(queries), "label": a.name}
-                if not item and "pexels" in prefs_sources and pexels.configured() and queries:
+                if not item and "pexels" in prefs_sources and stock.configured() and queries:
                     for q in queries:
                         try:
-                            found = [r for r in pexels.search(q) if r["id"] not in used_pexels]
+                            found = [r for r in stock.search(q) if f"{r['provider']}_{r['id']}" not in used_pexels]
                         except Exception as e:
-                            log(f"Pexels search failed for '{q}': {e}")
+                            log(f"Stock search failed for '{q}': {e}")
                             found = []
                         if found:
                             r = found[0]
-                            used_pexels.add(r["id"])
-                            dest = bdir / f"pexels_{r['id']}.mp4"
+                            used_pexels.add(f"{r['provider']}_{r['id']}")
+                            dest = bdir / f"{r['provider']}_{r['id']}.mp4"
                             if not dest.exists():
-                                pexels.download(r, dest)
+                                stock.download(r, dest)
                             info = probe(dest)
-                            a = Asset(kind="broll", path=str(dest), name=q, tags=q.split(), source="pexels",
+                            a = Asset(kind="broll", path=str(dest), name=q, tags=q.split(), source=r["provider"],
                                       license=r["license"] + (f" — by {r['author']}" if r.get("author") else ""),
                                       source_url=r["url"], duration=info["duration"],
                                       width=(info["video"] or {}).get("width"), height=(info["video"] or {}).get("height"),
                                       project_id=project_id)
                             s.add(a)
                             s.flush()
-                            item = {"path": str(dest), "media": "video", "asset_id": a.id, "source": "pexels",
+                            used_assets.add(a.id)  # never reuse this clip as a 'library' match later
+                            item = {"path": str(dest), "media": "video", "asset_id": a.id, "source": r["provider"],
                                     "query": q, "label": q, "in": min(1.0, max(0, (info["duration"] or 3) - dur - 0.2))}
                             break
             if not item:
@@ -158,6 +159,7 @@ def plan(transcript, workdir: Path, style, script=None, project_id=None, log=pri
         s.commit()
     log(f"B-roll plan: {len(plan_items)} picks "
         f"({sum(1 for i in plan_items if i['source']=='pexels')} Pexels, "
+        f"{sum(1 for i in plan_items if i['source']=='pixabay')} Pixabay, "
         f"{sum(1 for i in plan_items if i['source']=='library')} library, "
         f"{sum(1 for i in plan_items if i['source']=='generated')} graphics)")
     return plan_items

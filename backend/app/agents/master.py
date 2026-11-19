@@ -222,7 +222,7 @@ def st_broll(ctx):
     items = broll.plan(_transcript(ctx), ctx.dir, style, script=sc[1] if sc else None, project_id=ctx.pid, log=ctx.log)
     write_json(ctx.dir / "broll_plan.json", items)
     return f"{len(items)} B-roll picks", {"count": len(items), "sources": {k: sum(1 for i in items if i["source"] == k)
-                                                                          for k in ("library", "pexels", "generated")}}
+                                                                          for k in ("library", "pexels", "pixabay", "generated")}}
 
 
 def st_edit(ctx):

@@ -75,6 +75,7 @@ SECRET_FIELDS = {
     "anthropic": [("ANTHROPIC_API_KEY", True)],
     "youtube": [("YOUTUBE_API_KEY", True)],
     "pexels": [("PEXELS_API_KEY", True)],
+    "pixabay": [("PIXABAY_API_KEY", True)],
     "heygen": [("HEYGEN_API_KEY", True), ("HEYGEN_AVATAR_ID", False), ("HEYGEN_VOICE_ID", False)],
     "instagram": [("INSTAGRAM_ACCESS_TOKEN", True), ("INSTAGRAM_BUSINESS_ID", False)],
 }

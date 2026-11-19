@@ -200,7 +200,7 @@ export default function Editor() {
     </div>
 
     {picker && <Modal title={picker.mode === 'add' ? 'Add B-roll at ' + fmtT(time) : 'Replace B-roll'} onClose={() => setPicker(null)}>
-      {(lib.data || []).length === 0 ? <div className="empty">Your library is empty. Upload footage in the B-Roll Library (or import from Pexels there).</div> :
+      {(lib.data || []).length === 0 ? <div className="empty">Your library is empty. Upload footage in the B-Roll Library (or import free stock footage there).</div> :
         <div className="grid g3">{lib.data.map(a => <div key={a.id} className="card" style={{ padding: 8, cursor: 'pointer' }} onClick={() => {
           change(e => {
             const item = { path: null, url: a.url, media: a.kind === 'image' ? 'image' : 'video', asset_id: a.id, source: a.source, label: a.name, query: '' }

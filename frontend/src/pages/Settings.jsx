@@ -47,7 +47,7 @@ export default function Settings() {
         </div>
         <div className="field"><label>Default background music</label><select value={p.audio?.music_asset_id || ''} onChange={e => u('audio', { ...p.audio, music_asset_id: e.target.value ? +e.target.value : null })}>
           <option value="">Generated ambient pad</option>{(music.data || []).map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select></div>
-        <div className="small dim">B-roll source order: your library → Pexels → typographic graphics. Voice, music and SFX levels are in Editing Templates → Audio.</div>
+        <div className="small dim">B-roll source order: your library → free stock (Pexels, else Pixabay) → typographic graphics. Voice, music and SFX levels are in Editing Templates → Audio.</div>
       </div>
       <div className="card" style={{ gridColumn: 'span 2' }}><div className="row between"><h2>Avatar & voice configuration</h2><button className="btn" onClick={saveAvatar}>Save avatar config</button></div>
         <textarea style={{ minHeight: 280, fontFamily: 'ui-monospace, monospace', fontSize: 12 }} value={a} onChange={e => setA(e.target.value)} /></div>

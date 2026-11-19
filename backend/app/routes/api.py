@@ -12,7 +12,7 @@ from ..db import (SessionLocal, Project, Stage, Job, ResearchRun, Competitor, Id
                   IntegrationEvent, now)
 from ..store import (get_setting, set_setting, reset_setting, SECRET_FIELDS, save_secret, secret_status, masked,
                      log_event)
-from ..providers import claude, youtube, pexels, heygen, instagram
+from ..providers import claude, youtube, pexels, pixabay, stock, heygen, instagram
 from ..agents import master
 from ..agents.master import STAGES, enqueue, reset_from, project_dir
 from ..engine import edl as E
@@ -95,6 +95,7 @@ PROVIDERS = {
     "anthropic": ("Anthropic Claude", claude, "Ideas, scripts, B-roll matching, Roman Urdu polish, QC vision", "Pay-as-you-go (Opus 5.5: $4 / $20 per M tokens)"),
     "youtube": ("YouTube Data API v3", youtube, "Viral research and competitor metrics (verified)", "Free, 10,000 units/day (search = 100 units)"),
     "pexels": ("Pexels", pexels, "Licensed stock B-roll", "Free (Pexels License)"),
+    "pixabay": ("Pixabay", pixabay, "Free stock B-roll (used when Pexels has no key)", "Free (Pixabay Content License)"),
     "heygen": ("HeyGen", heygen, "AI avatar video (your Digital Twin + cloned voice)", "Paid plan with API access"),
     "instagram": ("Instagram Graph API", instagram, "Instagram competitor metrics (Business Discovery)", "Free; needs IG Business account + Meta app"),
 }
@@ -758,7 +759,9 @@ def delete_asset(aid: int):
 @r.get("/stock/search")
 def stock_search(q: str):
     try:
-        return pexels.search(q, per_page=12)
+        if not stock.configured():
+            raise StageError("Add a Pexels or Pixabay key in Integrations to search stock footage.")
+        return stock.search(q, per_page=12)
     except StageError as e:
         raise HTTPException(400, str(e))
 
@@ -770,15 +773,18 @@ class StockImport(BaseModel):
 @r.post("/stock/import")
 def stock_import(body: StockImport):
     it = body.item
-    dest = LIBRARY_DIR / f"pexels_{it['id']}.mp4"
+    prov = it.get("provider", "pexels")
+    if prov not in stock.PROVIDERS:
+        raise HTTPException(400, "Unknown stock provider")
+    dest = LIBRARY_DIR / f"{prov}_{int(it['id'])}.mp4"
     try:
-        pexels.download(it, dest)
+        stock.download(it, dest)
     except Exception as e:
         raise HTTPException(400, f"Download failed: {e}")
     info = probe(dest)
     with SessionLocal() as s:
         a = Asset(kind="broll", path=str(dest), name=it.get("query", "stock"), tags=it.get("query", "").lower().split(),
-                  source="pexels", license=it.get("license", "Pexels License"), source_url=it.get("url", ""),
+                  source=prov, license=it.get("license", ""), source_url=it.get("url", ""),
                   duration=info["duration"], width=(info["video"] or {}).get("width"), height=(info["video"] or {}).get("height"))
         s.add(a)
         s.commit()

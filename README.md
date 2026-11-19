@@ -10,7 +10,7 @@ React dashboard (Vite) ──> FastAPI ──> SQLite (or PostgreSQL)
                               │    Research · Strategist · Ideas · Script · Avatar · B-roll
                               │    Editor · Subtitle · Audio · QC agents
                               ├─ Job workers (DB-backed queue, resumes after restart)
-                              ├─ Providers: Claude · YouTube Data · Instagram Graph · HeyGen · Pexels
+                              ├─ Providers: Claude · YouTube Data · Instagram Graph · HeyGen · Pexels · Pixabay
                               ├─ Engine: faster-whisper + FFmpeg + libass + Pillow (EDL → MP4)
                               └─ Encrypted server-side key store (keys never reach the browser)
 ```
@@ -80,7 +80,8 @@ levels, colour grade and the CTA. Undo and redo are supported. Press **Render pr
 |---|---|---|---|
 | Anthropic Claude | ideas, scripts, B-roll matching, cut selection, Roman Urdu polish, QC vision check | `ANTHROPIC_API_KEY` | pay per use (Opus 5.5: $4 / $20 per M tokens; a full video is typically a few cents) |
 | YouTube Data API v3 | viral research, competitor channels, verified metrics | `YOUTUBE_API_KEY` | free, 10,000 units/day; one research run ≈ 1,600 units |
-| Pexels | licensed stock B-roll | `PEXELS_API_KEY` | free |
+| Pexels | licensed stock B-roll | `PEXELS_API_KEY` | free (new keys currently paused) |
+| Pixabay | stock B-roll, used when Pexels has no key | `PIXABAY_API_KEY` (instant at pixabay.com/api/docs) | free |
 | HeyGen | AI avatar video from your Digital Twin + cloned voice | `HEYGEN_API_KEY`, `HEYGEN_AVATAR_ID`, `HEYGEN_VOICE_ID` | paid plan with API access |
 | Instagram Graph API | Instagram competitor metrics (Business Discovery) | `INSTAGRAM_ACCESS_TOKEN`, `INSTAGRAM_BUSINESS_ID` | free; needs an IG Business account + Meta app |
 | TikTok | — | official Research API is limited to approved researchers | add TikTok competitors manually (labelled unverified) |
@@ -97,7 +98,7 @@ The API never returns key values to the browser, only a masked last four charact
 | Research, competitor discovery | blocked with a clear message (no YouTube key); manual competitor entry works |
 | Ideas, script generation | blocked (no Claude); manual ideas and manual scripts work |
 | Avatar | "own recording" mode works; HeyGen mode blocked until configured |
-| B-roll | your library + typographic graphics; Pexels needs its key |
+| B-roll | your library + typographic graphics; Pexels or Pixabay needs a key |
 | Editing, subtitles, audio, QC, export | fully local, always works |
 
 Nothing is ever simulated: a stage either runs for real, is skipped with a reason, or fails with a reason.
@@ -123,7 +124,7 @@ backend/app/
   store.py              settings + encrypted secrets
   routes/api.py         REST API
   agents/               master (pipeline + queue), research, content (ideas/scripts), broll, qc, schemas
-  providers/            claude, youtube, pexels, heygen, instagram
+  providers/            claude, youtube, pexels, pixabay (stock.py picks one), heygen, instagram
   engine/               transcribe, edl (edit decision list), render (FFmpeg), graphics (Pillow), sfx (synthesised)
   defaults/             style_profile.json (from IMG_4762), avatar_profile.json (from IMG_4917)
 frontend/src/pages/     the 14 dashboard sections

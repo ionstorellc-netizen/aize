@@ -8,6 +8,23 @@ from ..config import FONTS_DIR, FFMPEG
 from ..util import ffmpeg, run, probe, ass_color, StageError
 from . import graphics, sfx
 from .edl import resolved
+
+
+_FLAG = None
+
+
+def _filter_script_flag():
+    """FFmpeg 7+ reads an option's value from a file with "-/filter_complex"; FFmpeg 9 removed the old
+    -filter_complex_script. Pick the right one for the installed FFmpeg (6.x still needs the old flag)."""
+    global _FLAG
+    if _FLAG is None:
+        try:
+            m = re.search(r"version n?(\d+)\.", run([FFMPEG, "-version"], timeout=30).stdout)
+            major = int(m.group(1)) if m else 99  # git builds ("N-12345-...") are recent
+        except Exception:
+            major = 99
+        _FLAG = "-/filter_complex" if major >= 7 else "-filter_complex_script"
+    return _FLAG
 import os
 from ..config import STORAGE
 
@@ -289,7 +306,7 @@ def render(edl, style, workdir: Path, out_path: Path, preview=False, music_path=
     venc = (["-c:v", "libx264", "-preset", "ultrafast", "-crf", "28"] if preview else
             ["-c:v", "libx264", "-preset", preset, "-crf", str(crf), "-profile:v", "high", "-level", "4.2"])
     log(f"Compositing {len(res['broll'])} B-roll, {len(res['titles'])} titles, {len(res['subtitles'])} captions")
-    ffmpeg(*inputs, "-filter_complex_script", str(script), "-map", f"[{cur}]", "-map", "[aout]",
+    ffmpeg(*inputs, _filter_script_flag(), str(script), "-map", f"[{cur}]", "-map", "[aout]",
            *venc, "-pix_fmt", "yuv420p", "-r", str(fps), "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
            "-t", f"{total:.3f}", "-movflags", "+faststart", str(out_path), timeout=7200)
     if not preview:

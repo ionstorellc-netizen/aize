@@ -136,8 +136,11 @@ def plan(transcript, workdir: Path, style, script=None, project_id=None, log=pri
                                       source_url=r["url"], duration=info["duration"],
                                       width=(info["video"] or {}).get("width"), height=(info["video"] or {}).get("height"),
                                       project_id=project_id)
-                            s.add(a)
-                            s.flush()
+                            # Commit in its own short session: holding a write transaction open across the
+                            # next network searches/downloads locked SQLite for the job log and event writers.
+                            with SessionLocal() as ws:
+                                ws.add(a)
+                                ws.commit()
                             used_assets.add(a.id)  # never reuse this clip as a 'library' match later
                             item = {"path": str(dest), "media": "video", "asset_id": a.id, "source": r["provider"],
                                     "query": q, "label": q, "in": min(1.0, max(0, (info["duration"] or 3) - dur - 0.2))}
